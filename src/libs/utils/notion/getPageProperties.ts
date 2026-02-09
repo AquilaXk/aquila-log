@@ -38,14 +38,14 @@ async function getPageProperties(
         }
         case "select": {
           const selects = getTextContent(val)
-          if (selects[0]?.length) {
+          if (selects?.length) {
             properties[schema[key].name] = selects.split(",")
           }
           break
         }
         case "multi_select": {
           const selects = getTextContent(val)
-          if (selects[0]?.length) {
+          if (selects?.length) {
             properties[schema[key].name] = selects.split(",")
           }
           break
