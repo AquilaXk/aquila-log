@@ -100,16 +100,21 @@ const StyledWrapper = styled.div`
   }
 
   .notion-table-view {
-    border: 1px solid
+    border: 2px solid
       ${({ theme }) =>
         theme.scheme === "dark"
-          ? "rgba(255, 255, 255, 0.14)"
-          : "rgba(0, 0, 0, 0.12)"};
+          ? "rgba(255, 255, 255, 0.2)"
+          : "rgba(0, 0, 0, 0.16)"};
     border-radius: 12px;
     overflow: hidden;
   }
 
   .notion-simple-table {
+    border: 2px solid
+      ${({ theme }) =>
+        theme.scheme === "dark"
+          ? "rgba(255, 255, 255, 0.2)"
+          : "rgba(0, 0, 0, 0.16)"};
     border-radius: 12px;
     overflow: hidden;
   }
