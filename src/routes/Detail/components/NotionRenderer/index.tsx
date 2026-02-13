@@ -99,7 +99,6 @@ const StyledWrapper = styled.div`
         : "rgba(0, 0, 0, 0.12)"};
   }
 
-  .notion-table,
   .notion-table-view,
   .notion-simple-table {
     border: 2px solid
@@ -109,6 +108,10 @@ const StyledWrapper = styled.div`
           : "rgba(0, 0, 0, 0.2)"};
     border-radius: 14px;
     overflow: hidden;
+  }
+
+  .notion-table {
+    border: none;
   }
 
   .notion-simple-table {
