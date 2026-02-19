@@ -10,10 +10,10 @@ const useMermaidEffect = () => {
     let running = false
 
     const renderMermaidBlocks = async () => {
-      const blocks = Array.from(
-        document.querySelectorAll<HTMLElement>("pre.language-mermaid")
+      const codeBlocks = Array.from(
+        document.querySelectorAll<HTMLElement>("pre.notion-code > code.language-mermaid")
       )
-      if (!blocks.length) return
+      if (!codeBlocks.length) return
 
       const mermaid = (await import("mermaid")).default
       const theme = scheme === "dark" ? "dark" : "default"
@@ -21,13 +21,39 @@ const useMermaidEffect = () => {
       mermaid.initialize({
         startOnLoad: false,
         theme,
+        themeCSS: `
+          .node rect {
+            rx: 12px;
+            ry: 12px;
+          }
+          .edgeLabel rect {
+            fill: transparent !important;
+            stroke: none !important;
+          }
+          .node polygon {
+            stroke-width: 1.5px;
+          }
+          .label foreignObject div {
+            line-height: 1.35;
+            font-size: 15px;
+          }
+          .edgePath path {
+            stroke-width: 1.5px;
+          }
+          .node rect,
+          .node polygon {
+            stroke-width: 1.5px;
+          }
+        `,
       })
 
-      for (let i = 0; i < blocks.length; i += 1) {
+      for (let i = 0; i < codeBlocks.length; i += 1) {
         if (disposed) return
-        const block = blocks[i]
+        const codeBlock = codeBlocks[i]
+        const block = codeBlock.closest<HTMLElement>("pre.notion-code")
+        if (!block) continue
         const source =
-          block.dataset.mermaidSource || block.textContent?.trim() || ""
+          block.dataset.mermaidSource || codeBlock.textContent?.trim() || ""
         if (!source) continue
 
         const alreadyRendered =

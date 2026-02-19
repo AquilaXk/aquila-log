@@ -3,6 +3,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { ExtendedRecordMap } from "notion-types"
 import useScheme from "src/hooks/useScheme"
+import useMermaidEffect from "src/routes/Detail/hooks/useMermaidEffect"
 
 // core styles shared by all of react-notion-x (required)
 import "react-notion-x/src/styles.css"
@@ -58,6 +59,7 @@ type Props = {
 const NotionRenderer: FC<Props> = ({ recordMap }) => {
   const [scheme] = useScheme()
   const wrapperRef = useRef<HTMLDivElement>(null)
+  useMermaidEffect()
 
   useEffect(() => {
     const root = wrapperRef.current
