@@ -10,7 +10,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "postbuild": "next-sitemap --config next-sitemap.config.js",
+    "postbuild": "echo \"skip next-sitemap (handled by pages/sitemap.xml.tsx)\"",
     "lint": "next lint"
   },
   "dependencies": {

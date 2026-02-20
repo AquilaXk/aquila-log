@@ -25,13 +25,29 @@ type Props = {
 const Category: React.FC<Props> = ({ readOnly = false, children }) => {
   const router = useRouter()
 
-  const handleClick = (value: string) => {
+  const handleClick = () => {
     if (readOnly) return
-    router.push(`/?category=${value}`)
+    router.push({
+      query: {
+        ...router.query,
+        category: children,
+      },
+    })
+  }
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLSpanElement>) => {
+    if (readOnly) return
+    if (event.key !== "Enter" && event.key !== " ") return
+    event.preventDefault()
+    handleClick()
   }
   return (
     <StyledWrapper
-      onClick={() => handleClick(children)}
+      role={readOnly ? undefined : "button"}
+      tabIndex={readOnly ? -1 : 0}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      aria-label={readOnly ? undefined : `Filter by category: ${children}`}
       css={{
         backgroundColor: getColorClassByName(children),
         cursor: readOnly ? "default" : "pointer",
@@ -44,7 +60,8 @@ const Category: React.FC<Props> = ({ readOnly = false, children }) => {
 
 export default Category
 
-const StyledWrapper = styled.div`
+const StyledWrapper = styled.span`
+  display: inline-block;
   padding-top: 0.25rem;
   padding-bottom: 0.25rem;
   padding-left: 0.5rem;

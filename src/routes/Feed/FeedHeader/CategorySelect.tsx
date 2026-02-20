@@ -13,7 +13,10 @@ const CategorySelect: React.FC<Props> = () => {
   const data = useCategoriesQuery()
   const [dropdownRef, opened, handleOpen] = useDropdown()
 
-  const currentCategory = `${router.query.category || ``}` || DEFAULT_CATEGORY
+  const currentCategory =
+    typeof router.query.category === "string"
+      ? router.query.category
+      : DEFAULT_CATEGORY
 
   const handleOptionClick = (category: string) => {
     router.push({
@@ -25,19 +28,28 @@ const CategorySelect: React.FC<Props> = () => {
   }
   return (
     <StyledWrapper>
-      <div ref={dropdownRef} className="wrapper" onClick={handleOpen}>
-        {currentCategory} Posts <MdExpandMore />
+      <div ref={dropdownRef}>
+        <button
+          type="button"
+          className="wrapper"
+          onClick={handleOpen}
+          aria-expanded={opened}
+          aria-haspopup="listbox"
+        >
+          {currentCategory} Posts <MdExpandMore />
+        </button>
       </div>
       {opened && (
-        <div className="content">
-          {Object.keys(data).map((key, idx) => (
-            <div
+        <div className="content" role="listbox">
+          {Object.keys(data).map((key) => (
+            <button
+              type="button"
               className="item"
-              key={idx}
+              key={key}
               onClick={() => handleOptionClick(key)}
             >
               {`${key} (${data[key]})`}
-            </div>
+            </button>
           ))}
         </div>
       )}
@@ -70,6 +82,9 @@ const StyledWrapper = styled.div`
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
       0 2px 4px -1px rgba(0, 0, 0, 0.06);
     > .item {
+      display: block;
+      width: 100%;
+      text-align: left;
       padding: 0.25rem;
       padding-left: 0.5rem;
       padding-right: 0.5rem;

@@ -8,10 +8,11 @@ type Props = {}
 
 const TagList: React.FC<Props> = () => {
   const router = useRouter()
-  const currentTag = router.query.tag || undefined
+  const currentTag =
+    typeof router.query.tag === "string" ? router.query.tag : undefined
   const data = useTagsQuery()
 
-  const handleClickTag = (value: any) => {
+  const handleClickTag = (value: string) => {
     // delete
     if (currentTag === value) {
       router.push({
@@ -39,13 +40,14 @@ const TagList: React.FC<Props> = () => {
       </div>
       <div className="list">
         {Object.keys(data).map((key) => (
-          <a
+          <button
+            type="button"
             key={key}
             data-active={key === currentTag}
             onClick={() => handleClickTag(key)}
           >
             {key}
-          </a>
+          </button>
         ))}
       </div>
     </StyledWrapper>
@@ -82,8 +84,9 @@ const StyledWrapper = styled.div`
       display: block;
     }
 
-    a {
+    button {
       display: block;
+      text-align: left;
       padding: 0.25rem;
       padding-left: 1rem;
       padding-right: 1rem;

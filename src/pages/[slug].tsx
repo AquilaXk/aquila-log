@@ -62,9 +62,13 @@ const DetailPage: NextPageWithLayout = () => {
   if (!post) return <CustomError />
 
   const date = post.date?.start_date || post.createdTime || ""
+  const publishedDate = new Date(date)
+  const publishedDateIso = Number.isNaN(publishedDate.getTime())
+    ? undefined
+    : publishedDate.toISOString()
   const meta = {
     title: post.title,
-    date: new Date(date).toISOString(),
+    date: publishedDateIso,
     image:
       post.thumbnail ??
       `${CONFIG.ogImageGenerateURL}/${encodeURIComponent(post.title)}.png`,

@@ -9,11 +9,29 @@ type Props = {
 const Tag: React.FC<Props> = ({ children }) => {
   const router = useRouter()
 
-  const handleClick = (value: string) => {
-    router.push(`/?tag=${value}`)
+  const handleClick = () => {
+    router.push({
+      query: {
+        ...router.query,
+        tag: children,
+      },
+    })
   }
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLSpanElement>) => {
+    if (event.key !== "Enter" && event.key !== " ") return
+    event.preventDefault()
+    handleClick()
+  }
+
   return (
-    <StyledWrapper onClick={() => handleClick(children)}>
+    <StyledWrapper
+      role="button"
+      tabIndex={0}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      aria-label={`Filter by tag: ${children}`}
+    >
       {children}
     </StyledWrapper>
   )
@@ -21,7 +39,8 @@ const Tag: React.FC<Props> = ({ children }) => {
 
 export default Tag
 
-const StyledWrapper = styled.div`
+const StyledWrapper = styled.span`
+  display: inline-block;
   padding-top: 0.25rem;
   padding-bottom: 0.25rem;
   padding-left: 0.5rem;
