@@ -1,19 +1,126 @@
 import { NotionAPI } from "notion-client"
 import { CONFIG } from "site.config"
-import getPageProperties from "src/libs/utils/notion/getPageProperties"
+import getPageProperties, {
+  NotionPageProperties,
+  NotionUser,
+} from "src/libs/utils/notion/getPageProperties"
 import { BlockMap, CollectionPropertySchemaMap } from "notion-types"
-import { TPost } from "src/types"
+import { TPost, TPostStatus, TPostType } from "src/types"
 
 const POSTS_CACHE_TTL_MS = 60 * 1000
 let postsCache: TPost[] | null = null
 let postsCacheAt = 0
 let pendingPostsPromise: Promise<TPost[]> | null = null
 
-export const getPosts = async (): Promise<TPost[]> => {
-  if (postsCache && Date.now() - postsCacheAt < POSTS_CACHE_TTL_MS) {
+type GetPostsOptions = {
+  forceFresh?: boolean
+}
+
+type UnknownRecord = Record<string, unknown>
+
+const unwrapRecordValue = <T,>(raw: unknown): T | undefined => {
+  if (!raw || typeof raw !== "object") return undefined
+  const level1 = (raw as UnknownRecord).value
+  if (level1 && typeof level1 === "object") {
+    const level2 = (level1 as UnknownRecord).value
+    if (level2 !== undefined) return level2 as T
+    return level1 as T
+  }
+  return raw as T
+}
+
+const getString = (value: unknown): string | undefined =>
+  typeof value === "string" && value.trim().length > 0 ? value : undefined
+
+const toStringArray = (value: unknown): string[] => {
+  if (Array.isArray(value)) {
+    return value.filter((item): item is string => typeof item === "string")
+  }
+  if (typeof value === "string" && value.trim().length > 0) {
+    return [value]
+  }
+  return []
+}
+
+const isPostType = (value: string): value is TPostType =>
+  value === "Post" || value === "Paper" || value === "Page"
+
+const isPostStatus = (value: string): value is TPostStatus =>
+  value === "Private" || value === "Public" || value === "PublicOnDetail"
+
+const normalizePostProperties = (
+  properties: NotionPageProperties
+): TPost | null => {
+  const title = getString(properties.title)
+  const slug = getString(properties.slug)
+  const id = getString(properties.id)
+  const createdTime =
+    getString(properties.createdTime) || new Date().toISOString()
+
+  if (!title || !slug || !id) return null
+
+  const date = properties.date as { start_date?: string } | undefined
+  const startDate =
+    getString(date?.start_date) || new Date(createdTime).toISOString().slice(0, 10)
+
+  const type = toStringArray(properties.type).filter(isPostType)
+  const status = toStringArray(properties.status).filter(isPostStatus)
+  if (!type.length || !status.length) return null
+
+  const tags = toStringArray(properties.tags)
+  const category = toStringArray(properties.category)
+  const summary = getString(properties.summary)
+  const thumbnail = getString(properties.thumbnail)
+  const fullWidth =
+    typeof properties.fullWidth === "boolean" ? properties.fullWidth : false
+
+  const rawAuthors = Array.isArray(properties.author) ? properties.author : []
+  const author = rawAuthors
+    .map((rawAuthor) => {
+      if (!rawAuthor || typeof rawAuthor !== "object") return null
+      const authorRecord = rawAuthor as Record<string, unknown>
+      const authorId = getString(authorRecord.id)
+      const authorName = getString(authorRecord.name)
+      if (!authorId || !authorName) return null
+      const profilePhoto = getString(authorRecord.profile_photo)
+      return {
+        id: authorId,
+        name: authorName,
+        profile_photo: profilePhoto,
+      }
+    })
+    .filter(
+      (
+        authorItem
+      ): authorItem is { id: string; name: string; profile_photo: string | undefined } =>
+        authorItem !== null
+    )
+
+  return {
+    id,
+    title,
+    slug,
+    createdTime,
+    date: { start_date: startDate },
+    type,
+    status,
+    fullWidth,
+    tags: tags.length ? tags : undefined,
+    category: category.length ? category : undefined,
+    summary,
+    thumbnail,
+    author: author.length ? author : undefined,
+  }
+}
+
+export const getPosts = async (
+  options: GetPostsOptions = {}
+): Promise<TPost[]> => {
+  const { forceFresh = false } = options
+  if (!forceFresh && postsCache && Date.now() - postsCacheAt < POSTS_CACHE_TTL_MS) {
     return postsCache
   }
-  if (pendingPostsPromise) return pendingPostsPromise
+  if (!forceFresh && pendingPostsPromise) return pendingPostsPromise
 
   pendingPostsPromise = (async () => {
     const api = new NotionAPI()
@@ -29,8 +136,10 @@ export const getPosts = async (): Promise<TPost[]> => {
       let schema: CollectionPropertySchemaMap | null = null
 
       for (const key of collectionKeys) {
-        const rawData = collectionMap[key] as any
-        const data = rawData?.value?.value || rawData?.value || rawData
+        const rawData = collectionMap[key]
+        const data = unwrapRecordValue<{ schema?: CollectionPropertySchemaMap }>(
+          rawData
+        )
         if (data?.schema) {
           collectionId = key
           schema = data.schema
@@ -63,8 +172,10 @@ export const getPosts = async (): Promise<TPost[]> => {
       } else {
         const blockMap = recordMap.block || {}
         pageIds = Object.keys(blockMap).filter((id) => {
-          const rawBlock = blockMap[id] as any
-          const block = rawBlock?.value?.value || rawBlock?.value
+          const rawBlock = blockMap[id]
+          const block = unwrapRecordValue<{ type?: string; parent_id?: string }>(
+            rawBlock
+          )
           return (
             block && block.type === "page" && block.parent_id === collectionId
           )
@@ -73,7 +184,7 @@ export const getPosts = async (): Promise<TPost[]> => {
 
       // 3. 데이터 매핑
       const blockMap = recordMap.block as BlockMap
-      const userCache = new Map<string, any>()
+      const userCache = new Map<string, NotionUser>()
       const mappedPosts = await Promise.all(
         pageIds.map(async (id) => {
           const properties = await getPageProperties(
@@ -104,26 +215,20 @@ export const getPosts = async (): Promise<TPost[]> => {
             (k) => k.toLowerCase() === "type" || k === "종류"
           )
 
-          if (titleKey) properties.title = properties[titleKey]
-          if (dateKey) properties.date = properties[dateKey]
-          if (slugKey) properties.slug = properties[slugKey]
-          if (statusKey) properties.status = properties[statusKey]
-          if (typeKey) properties.type = properties[typeKey]
+          const mutableProperties = properties as Record<string, unknown>
+          if (titleKey) mutableProperties.title = properties[titleKey]
+          if (dateKey) mutableProperties.date = properties[dateKey]
+          if (slugKey) mutableProperties.slug = properties[slugKey]
+          if (statusKey) mutableProperties.status = properties[statusKey]
+          if (typeKey) mutableProperties.type = properties[typeKey]
 
-          // 필수 데이터(title)가 있는 경우만 반환
-          if (!properties.title) return null
-          if (!properties.date?.start_date) {
-            properties.date = {
-              start_date: new Date(properties.createdTime)
-                .toISOString()
-                .slice(0, 10),
-            }
-          }
-          return properties as TPost
+          return normalizePostProperties(properties)
         })
       )
 
-      const posts: TPost[] = mappedPosts.filter(Boolean) as TPost[]
+      const posts: TPost[] = mappedPosts.filter(
+        (post): post is TPost => post !== null
+      )
 
       // 4. 정렬 (최신순)
       posts.sort((a, b) => {

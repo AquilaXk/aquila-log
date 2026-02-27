@@ -36,7 +36,9 @@ export const Global = () => {
         }
 
         a {
-          all: unset;
+          color: inherit;
+          text-decoration: none;
+          font: inherit;
           cursor: pointer;
         }
 

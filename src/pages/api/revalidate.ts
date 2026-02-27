@@ -1,6 +1,9 @@
 import { NextApiRequest, NextApiResponse } from "next"
 import { getPosts } from "../../apis"
 
+const normalizeNotionPageId = (id: string) =>
+  id.replace(/[^a-f0-9]/gi, "").slice(0, 32)
+
 // Revalidate endpoint (POST only)
 // - token: x-revalidate-token header (or ?secret=... fallback)
 // - path: JSON body { path: "/target" } (or ?path=... fallback)
@@ -34,26 +37,41 @@ export default async function handler(
   const targetPath = pathFromBody || pathFromQuery
 
   try {
+    let paths: string[] = []
+
     if (targetPath) {
       const normalizedPath = targetPath.startsWith("/")
         ? targetPath
         : `/${targetPath}`
       await res.revalidate(normalizedPath)
+      paths = [normalizedPath]
     } else {
-      const posts = await getPosts()
+      // Force fresh pull so webhook-triggered revalidation doesn't miss newly changed posts.
+      const posts = await getPosts({ forceFresh: true })
       const pathsToRevalidate = new Set<string>(["/"])
       posts.forEach((row) => {
         if (row?.slug) {
           pathsToRevalidate.add(`/${row.slug}`)
         }
+        if (row?.id) {
+          const normalizedPageId = normalizeNotionPageId(row.id)
+          if (normalizedPageId.length === 32) {
+            pathsToRevalidate.add(`/page/${normalizedPageId}`)
+          }
+        }
       })
-      const revalidateRequests = [...pathsToRevalidate].map((targetPath) =>
+      paths = [...pathsToRevalidate]
+      const revalidateRequests = paths.map((targetPath) =>
         res.revalidate(targetPath)
       )
       await Promise.all(revalidateRequests)
     }
 
-    res.json({ revalidated: true })
+    res.json({
+      revalidated: true,
+      count: paths.length,
+      paths,
+    })
   } catch (err) {
     return res.status(500).send("Error revalidating")
   }

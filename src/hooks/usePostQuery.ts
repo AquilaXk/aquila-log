@@ -5,9 +5,11 @@ import { PostDetail } from "src/types"
 
 const usePostQuery = () => {
   const router = useRouter()
-  const { slug } = router.query
+  const slug = typeof router.query.slug === "string" ? router.query.slug : ""
   const { data } = useQuery<PostDetail>({
-    queryKey: queryKey.post(`${slug}`),
+    queryKey: queryKey.post(slug),
+    // This hook reads dehydrated cache populated by getStaticProps.
+    // Network fetching is intentionally disabled on the client.
     enabled: false,
   })
 
