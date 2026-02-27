@@ -154,6 +154,27 @@ export const notionRendererStyles = css`
     --ad-icon-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpolygon points='24,4 45,41 3,41' fill='%23d96c77'/%3E%3Crect x='22' y='16' width='4' height='14' rx='2' fill='white'/%3E%3Ccircle cx='24' cy='34' r='2.5' fill='white'/%3E%3C/svg%3E");
   }
 
+  .notion-callout.notion-admonition-outline {
+    --ad-accent: #6e94ad;
+    --ad-header-bg: #dfe8ef;
+    --ad-body-bg: #e8eef3;
+    --ad-icon-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect x='7' y='5' width='34' height='38' rx='4' fill='%236e94ad'/%3E%3Crect x='13' y='14' width='22' height='2.8' rx='1.4' fill='white'/%3E%3Crect x='13' y='21' width='22' height='2.8' rx='1.4' fill='white'/%3E%3Crect x='13' y='28' width='16' height='2.8' rx='1.4' fill='white'/%3E%3Crect x='17' y='2.5' width='14' height='6' rx='3' fill='%235b7f96'/%3E%3C/svg%3E");
+  }
+
+  .notion-callout.notion-admonition-example {
+    --ad-accent: #2d9b56;
+    --ad-header-bg: #deefdf;
+    --ad-body-bg: #eaf4eb;
+    --ad-icon-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect x='5' y='5' width='38' height='38' rx='8' fill='%232d9b56'/%3E%3Cpath d='M14 25.5l6.2 6.3L34.5 17.5' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  }
+
+  .notion-callout.notion-admonition-summary {
+    --ad-accent: #7a6fb2;
+    --ad-header-bg: #e5e2f0;
+    --ad-body-bg: #edebf5;
+    --ad-icon-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath d='M8 11h22v28H8z' fill='%237a6fb2'/%3E%3Cpath d='M18 8h22v28H18z' fill='%238a80c2'/%3E%3Cpath d='M23 16h12M23 22h12M23 28h8' stroke='white' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E");
+  }
+
   .notion-callout.notion-admonition-tip .notion-callout-text::before {
     content: "Tip";
   }
@@ -164,6 +185,18 @@ export const notionRendererStyles = css`
 
   .notion-callout.notion-admonition-warning .notion-callout-text::before {
     content: "Warning";
+  }
+
+  .notion-callout.notion-admonition-outline .notion-callout-text::before {
+    content: "모범 개요";
+  }
+
+  .notion-callout.notion-admonition-example .notion-callout-text::before {
+    content: "예시답안";
+  }
+
+  .notion-callout.notion-admonition-summary .notion-callout-text::before {
+    content: "핵심 개념 정리";
   }
 
   .notion-table-view,

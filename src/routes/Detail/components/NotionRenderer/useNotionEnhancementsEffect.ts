@@ -19,7 +19,10 @@ const useNotionEnhancementsEffect = (
           "notion-admonition",
           "notion-admonition-tip",
           "notion-admonition-info",
-          "notion-admonition-warning"
+          "notion-admonition-warning",
+          "notion-admonition-outline",
+          "notion-admonition-example",
+          "notion-admonition-summary"
         )
         callout.removeAttribute("data-admonition-title")
 
@@ -27,16 +30,34 @@ const useNotionEnhancementsEffect = (
           .querySelector<HTMLElement>(".notion-page-icon-inline")
           ?.textContent?.trim()
 
-        let kind: "tip" | "info" | "warning" | null = null
+        let kind:
+          | "tip"
+          | "info"
+          | "warning"
+          | "outline"
+          | "example"
+          | "summary"
+          | null = null
         if (icon?.includes("💡")) kind = "tip"
         if (icon?.includes("ℹ") || icon?.includes("ℹ️")) kind = "info"
         if (icon?.includes("⚠") || icon?.includes("⚠️")) kind = "warning"
+        if (icon?.includes("📋")) kind = "outline"
+        if (icon?.includes("✅")) kind = "example"
+        if (icon?.includes("📚")) kind = "summary"
         if (!kind) return
 
         callout.classList.add("notion-admonition", `notion-admonition-${kind}`)
+        const titleByKind = {
+          tip: "Tip",
+          info: "Info",
+          warning: "Warning",
+          outline: "모범 개요",
+          example: "예시답안",
+          summary: "핵심 개념 정리",
+        } as const
         callout.setAttribute(
           "data-admonition-title",
-          kind === "tip" ? "Tip" : kind === "info" ? "Info" : "Warning"
+          titleByKind[kind]
         )
       })
     }
