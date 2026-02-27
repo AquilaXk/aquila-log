@@ -25,6 +25,12 @@ const useNotionEnhancementsEffect = (
           "notion-admonition-summary"
         )
         callout.removeAttribute("data-admonition-title")
+        const existingCalloutText =
+          callout.querySelector<HTMLElement>(".notion-callout-text")
+        existingCalloutText?.removeAttribute("data-admonition-title")
+        callout
+          .querySelectorAll<HTMLElement>(".notion-text[data-admonition-heading='true']")
+          .forEach((el) => el.removeAttribute("data-admonition-heading"))
 
         const icon = callout
           .querySelector<HTMLElement>(".notion-page-icon-inline")
@@ -55,10 +61,30 @@ const useNotionEnhancementsEffect = (
           example: "예시답안",
           summary: "핵심 개념 정리",
         } as const
-        callout.setAttribute(
-          "data-admonition-title",
-          titleByKind[kind]
-        )
+
+        const calloutText = callout.querySelector<HTMLElement>(".notion-callout-text")
+        let parsedTitle: string | null = null
+        if (calloutText) {
+          const textBlocks = Array.from(
+            calloutText.querySelectorAll<HTMLElement>(".notion-text")
+          )
+          for (const block of textBlocks) {
+            const headingEl = block.querySelector<HTMLElement>("strong, b")
+            const headingText = headingEl?.textContent?.trim()
+            if (headingText) {
+              parsedTitle = headingText
+              const blockText = block.textContent?.trim() || ""
+              if (blockText === headingText) {
+                block.setAttribute("data-admonition-heading", "true")
+              }
+              break
+            }
+          }
+        }
+
+        const finalTitle = parsedTitle || titleByKind[kind]
+        callout.setAttribute("data-admonition-title", finalTitle)
+        calloutText?.setAttribute("data-admonition-title", finalTitle)
       })
     }
 

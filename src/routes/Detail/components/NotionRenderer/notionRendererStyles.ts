@@ -133,6 +133,10 @@ export const notionRendererStyles = css`
     line-height: 1.6;
   }
 
+  .notion-callout.notion-admonition .notion-text[data-admonition-heading="true"] {
+    display: none;
+  }
+
   .notion-callout.notion-admonition-tip {
     --ad-accent: #e08600;
     --ad-header-bg: #ebe2d4;
@@ -173,30 +177,6 @@ export const notionRendererStyles = css`
     --ad-header-bg: #e5e2f0;
     --ad-body-bg: #edebf5;
     --ad-icon-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath d='M8 11h22v28H8z' fill='%237a6fb2'/%3E%3Cpath d='M18 8h22v28H18z' fill='%238a80c2'/%3E%3Cpath d='M23 16h12M23 22h12M23 28h8' stroke='white' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E");
-  }
-
-  .notion-callout.notion-admonition-tip .notion-callout-text::before {
-    content: "Tip";
-  }
-
-  .notion-callout.notion-admonition-info .notion-callout-text::before {
-    content: "Info";
-  }
-
-  .notion-callout.notion-admonition-warning .notion-callout-text::before {
-    content: "Warning";
-  }
-
-  .notion-callout.notion-admonition-outline .notion-callout-text::before {
-    content: "모범 개요";
-  }
-
-  .notion-callout.notion-admonition-example .notion-callout-text::before {
-    content: "예시답안";
-  }
-
-  .notion-callout.notion-admonition-summary .notion-callout-text::before {
-    content: "핵심 개념 정리";
   }
 
   .notion-table-view,
