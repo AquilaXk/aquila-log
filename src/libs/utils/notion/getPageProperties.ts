@@ -3,12 +3,25 @@ import { NotionAPI } from "notion-client"
 import { BlockMap, CollectionPropertySchemaMap } from "notion-types"
 import { customMapImageUrl } from "./customMapImageUrl"
 
+type NotionUser = {
+  id?: string
+  name?: string
+  profile_photo?: string | null
+}
+
+type GetPagePropertiesOptions = {
+  api?: NotionAPI
+  userCache?: Map<string, NotionUser>
+}
+
 async function getPageProperties(
   id: string,
   block: BlockMap,
-  schema: CollectionPropertySchemaMap
+  schema: CollectionPropertySchemaMap,
+  options: GetPagePropertiesOptions = {}
 ) {
-  const api = new NotionAPI()
+  const api = options.api ?? new NotionAPI()
+  const userCache = options.userCache ?? new Map<string, NotionUser>()
 
   // 1. 데이터 포장지 벗기기
   const rawBlock = block?.[id] as any
@@ -63,13 +76,20 @@ async function getPageProperties(
           }
           case "person": {
             const rawUsers = rawValue.flat()
-            const users = []
-            for (let i = 0; i < rawUsers.length; i++) {
-              if (rawUsers[i][0][1]) {
-                const userId = rawUsers[i][0]
-                const res: any = await api.getUsers(userId)
+            const userIds = rawUsers
+              .map((rawUser: any) =>
+                Array.isArray(rawUser?.[0]) ? rawUser[0][1] : undefined
+              )
+              .filter(Boolean)
+
+            const users = await Promise.all(
+              userIds.map(async (userId: string) => {
+                const cachedUser = userCache.get(userId)
+                if (cachedUser) return cachedUser
+
+                const res: any = await api.getUsers([userId])
                 const resValue =
-                  res?.recordMapWithRoles?.notion_user?.[userId[1]]?.value
+                  res?.recordMapWithRoles?.notion_user?.[userId]?.value
                 const user = {
                   id: resValue?.id,
                   name:
@@ -78,9 +98,10 @@ async function getPageProperties(
                     undefined,
                   profile_photo: resValue?.profile_photo || null,
                 }
-                users.push(user)
-              }
-            }
+                userCache.set(userId, user)
+                return user
+              })
+            )
             properties[propertyName] = users
             break
           }

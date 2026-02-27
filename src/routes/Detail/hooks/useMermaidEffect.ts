@@ -1,17 +1,19 @@
-import { useEffect } from "react"
+import { RefObject, useEffect } from "react"
 import useScheme from "src/hooks/useScheme"
-const useMermaidEffect = () => {
+
+const useMermaidEffect = (rootRef?: RefObject<HTMLElement>) => {
   const [scheme] = useScheme()
 
   useEffect(() => {
-    if (typeof document === "undefined") return
+    const root = rootRef?.current
+    if (!root) return
 
     let disposed = false
     let running = false
 
     const renderMermaidBlocks = async () => {
       const codeBlocks = Array.from(
-        document.querySelectorAll<HTMLElement>("pre.notion-code > code.language-mermaid")
+        root.querySelectorAll<HTMLElement>("pre.notion-code > code.language-mermaid")
       )
       if (!codeBlocks.length) return
 
@@ -92,13 +94,13 @@ const useMermaidEffect = () => {
       run()
     })
 
-    observer.observe(document.body, { childList: true, subtree: true })
+    observer.observe(root, { childList: true, subtree: true })
 
     return () => {
       disposed = true
       observer.disconnect()
     }
-  }, [scheme])
+  }, [rootRef, scheme])
 
   return
 }

@@ -6,12 +6,13 @@ import useScheme from "src/hooks/useScheme"
 const Giscus: React.FC = () => {
   const [scheme] = useScheme()
   const containerRef = useRef<HTMLDivElement>(null)
+  const currentTheme = scheme === "dark" ? "transparent_dark" : "light"
 
   useEffect(() => {
     if (!containerRef.current) return
 
     const parent = containerRef.current
-    parent.innerHTML = ""
+    if (parent.childNodes.length > 0) return
 
     const script = document.createElement("script")
     const { config } = CONFIG.giscus
@@ -31,13 +32,28 @@ const Giscus: React.FC = () => {
     script.setAttribute("data-input-position", "top")
     script.setAttribute("data-lang", config.lang || "ko")
 
-    // 팁: 'transparent_dark'를 썼는데도 이질감이 있다면 'noborder_dark'를 시도해보세요.
-    // 혹은 커스텀 CSS를 연결할 수 있지만, 일단은 'transparent_dark'가 최선입니다.
-    const theme = scheme === "dark" ? "transparent_dark" : "light"
-    script.setAttribute("data-theme", theme)
+    script.setAttribute("data-theme", currentTheme)
 
     parent.appendChild(script)
-  }, [scheme])
+  }, [currentTheme])
+
+  useEffect(() => {
+    const iframe = containerRef.current?.querySelector<HTMLIFrameElement>(
+      "iframe.giscus-frame"
+    )
+    if (!iframe?.contentWindow) return
+
+    iframe.contentWindow.postMessage(
+      {
+        giscus: {
+          setConfig: {
+            theme: currentTheme,
+          },
+        },
+      },
+      "https://giscus.app"
+    )
+  }, [currentTheme])
 
   return <StyledWrapper ref={containerRef} />
 }
