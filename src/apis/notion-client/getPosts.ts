@@ -83,20 +83,26 @@ const normalizePostProperties = (
       const authorName = getString(authorRecord.name)
       if (!authorId || !authorName) return null
       const profilePhoto = getString(authorRecord.profile_photo)
+      if (profilePhoto) {
+        return {
+          id: authorId,
+          name: authorName,
+          profile_photo: profilePhoto,
+        }
+      }
       return {
         id: authorId,
         name: authorName,
-        profile_photo: profilePhoto,
       }
     })
     .filter(
       (
         authorItem
-      ): authorItem is { id: string; name: string; profile_photo: string | undefined } =>
+      ): authorItem is { id: string; name: string; profile_photo?: string } =>
         authorItem !== null
     )
 
-  return {
+  const post: TPost = {
     id,
     title,
     slug,
@@ -105,12 +111,15 @@ const normalizePostProperties = (
     type,
     status,
     fullWidth,
-    tags: tags.length ? tags : undefined,
-    category: category.length ? category : undefined,
-    summary,
-    thumbnail,
-    author: author.length ? author : undefined,
   }
+
+  if (tags.length) post.tags = tags
+  if (category.length) post.category = category
+  if (summary) post.summary = summary
+  if (thumbnail) post.thumbnail = thumbnail
+  if (author.length) post.author = author
+
+  return post
 }
 
 export const getPosts = async (
